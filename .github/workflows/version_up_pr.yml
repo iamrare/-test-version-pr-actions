@@ -1,0 +1,40 @@
+name: version_up_pr
+
+on:
+  push:
+    branches:
+    - "version/*"
+    
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Extract version number
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
+      id: extract_version
+
+    - name: Extract branch name
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      id: extract_branch
+
+    - uses: actions/checkout@v2
+    - name: pull-request
+      uses: repo-sync/pull-request@v2
+      with:
+        source_branch: ""
+        destination_branch: "main"
+        pr_title: "Version up => ${{ steps.extract_version.outputs.branch }}(XXX)"
+        pr_body: |
+            ## マージ前
+            - [ ] Release note のチェック ...
+            ## マージ後
+            - [ ] v${{ steps.extract_version.outputs.branch }} のタグを公開する ...
+            - [ ] v${{ steps.extract_version.outputs.branch }} のマイルストーンを閉じる ... /milestones
+        pr_reviewer: "iamrare"
+        pr_assignee: "iamrare"
+        pr_label: "version_up"
+        pr_milestone: "v${{ steps.extract_version.outputs.branch }}"
+        pr_allow_empty: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
